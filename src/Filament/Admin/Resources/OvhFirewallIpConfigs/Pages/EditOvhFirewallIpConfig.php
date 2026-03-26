@@ -11,9 +11,17 @@ class EditOvhFirewallIpConfig extends EditRecord
 {
     protected static string $resource = OvhFirewallIpConfigResource::class;
 
+    protected function getFormActions(): array
+    {
+        return [];
+    }
+
     protected function getHeaderActions(): array
     {
         return [
+            $this->getSaveFormAction()->formId('form')
+                ->icon('tabler-device-floppy'),
+
             Actions\Action::make('sync')
                 ->label(__('firewall::firewall.ip_configs.sync_now'))
                 ->icon('tabler-refresh')
