@@ -27,6 +27,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['created_at', 'status']);
+            $table->index('synced_at');
+            $table->index(['status', 'created_at']);
         });
     }
 

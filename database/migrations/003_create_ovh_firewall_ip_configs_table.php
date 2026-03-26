@@ -24,6 +24,7 @@ return new class extends Migration
 
             $table->index(['panel_ip', 'enabled']);
             $table->index('node_id');
+            $table->index('enabled');
         });
     }
 

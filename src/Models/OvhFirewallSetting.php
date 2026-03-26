@@ -3,6 +3,7 @@
 namespace RoyalMultiGamers\FirewallOVHGames\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class OvhFirewallSetting extends Model
 {
@@ -42,27 +43,37 @@ class OvhFirewallSetting extends Model
         'consumer_key',
     ];
 
+    protected static ?self $instance = null;
+
     /**
-     * Get the singleton instance of settings.
+     * Get the singleton instance of settings with cache.
      */
     public static function getInstance(): self
     {
+        if (self::$instance !== null) {
+            return self::$instance;
+        }
+
         try {
-            $settings = self::first();
+            $settings = Cache::remember('firewall.settings', 3600, function () {
+                $setting = self::first();
 
-            if (!$settings) {
-                $settings = self::create([
-                    'endpoint' => config('firewall-ovh-games.ovh.endpoint', 'ovh-eu'),
-                    'sync_enabled' => config('firewall-ovh-games.sync.enabled', true),
-                    'sync_interval' => config('firewall-ovh-games.sync.interval', 5),
-                    'sync_on_events' => config('firewall-ovh-games.sync.sync_on_events', true),
-                    'default_protocol' => config('firewall-ovh-games.rules.default_protocol', 'other'),
-                ]);
-            }
+                if (!$setting) {
+                    $setting = self::create([
+                        'endpoint' => config('firewall-ovh-games.ovh.endpoint', 'ovh-eu'),
+                        'sync_enabled' => config('firewall-ovh-games.sync.enabled', true),
+                        'sync_interval' => config('firewall-ovh-games.sync.interval', 5),
+                        'sync_on_events' => config('firewall-ovh-games.sync.sync_on_events', true),
+                        'default_protocol' => config('firewall-ovh-games.rules.default_protocol', 'other'),
+                    ]);
+                }
 
+                return $setting;
+            });
+
+            self::$instance = $settings;
             return $settings;
         } catch (\Exception $e) {
-            // Return a new instance with defaults if table doesn't exist
             $instance = new static();
             $instance->endpoint = 'ovh-eu';
             $instance->sync_enabled = true;
@@ -71,6 +82,16 @@ class OvhFirewallSetting extends Model
             $instance->default_protocol = 'other';
             return $instance;
         }
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+        static::saved(function () {
+            Cache::forget('firewall.settings');
+            Cache::forget('firewall.stats');
+            self::$instance = null;
+        });
     }
 
     /**

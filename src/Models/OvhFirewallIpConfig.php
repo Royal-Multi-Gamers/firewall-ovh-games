@@ -100,6 +100,7 @@ class OvhFirewallIpConfig extends Model
     public static function getAvailableNodeIps(): array
     {
         $ips = [];
+        $filtered = [];
         
         $nodes = Node::all();
         
@@ -107,17 +108,44 @@ class OvhFirewallIpConfig extends Model
             $nodeIps = $node->ipAddresses();
             foreach ($nodeIps as $ip) {
                 // Skip localhost and wildcard IPs
-                if (!in_array($ip, ['0.0.0.0', '::', '127.0.0.1', 'localhost'])) {
-                    $ips[$ip] = [
-                        'ip' => $ip,
-                        'node_id' => $node->id,
-                        'node_name' => $node->name,
-                    ];
+                if (in_array($ip, ['0.0.0.0', '::', '127.0.0.1', 'localhost'])) {
+                    continue;
                 }
+
+                if (static::shouldIgnoreNodeIp($ip)) {
+                    $filtered[$ip] = true;
+                    continue;
+                }
+
+                $ips[$ip] = [
+                    'ip' => $ip,
+                    'node_id' => $node->id,
+                    'node_name' => $node->name,
+                ];
             }
         }
-        
-        return $ips;
+
+        return [
+            'ips' => $ips,
+            'filtered' => array_keys($filtered),
+        ];
+    }
+
+    /**
+     * Determine whether this node IP should be ignored during auto-discovery.
+     */
+    protected static function shouldIgnoreNodeIp(string $ip): bool
+    {
+        if (!(bool) config('firewall-ovh-games.discovery.ignore_docker_ips', true)) {
+            return false;
+        }
+
+        // Common Docker bridge/compose ranges on hosts.
+        if (preg_match('/^172\.(1[7-9]|2[0-9]|3[0-1])\./', $ip) === 1) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -126,7 +154,9 @@ class OvhFirewallIpConfig extends Model
      */
     public static function syncFromNodes(): array
     {
-        $nodeIps = static::getAvailableNodeIps();
+        $discovery = static::getAvailableNodeIps();
+        $nodeIps = $discovery['ips'];
+        $filteredIps = $discovery['filtered'];
         $existingConfigs = static::pluck('panel_ip')->toArray();
         
         $created = [];
@@ -154,6 +184,8 @@ class OvhFirewallIpConfig extends Model
             'created' => $created,
             'skipped' => $skipped,
             'total_node_ips' => count($nodeIps),
+            'filtered' => $filteredIps,
+            'filtered_count' => count($filteredIps),
         ];
     }
 }

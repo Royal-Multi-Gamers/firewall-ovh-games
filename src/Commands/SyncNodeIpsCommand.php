@@ -19,6 +19,10 @@ class SyncNodeIpsCommand extends Command
             $result = OvhFirewallIpConfig::syncFromNodes();
 
             $this->info("Total node IPs found: {$result['total_node_ips']}");
+
+            if (($result['filtered_count'] ?? 0) > 0) {
+                $this->comment('Ignored ' . $result['filtered_count'] . ' Docker/private IP(s).');
+            }
             
             if (count($result['created']) > 0) {
                 $this->info('Created ' . count($result['created']) . ' new IP configuration(s):');

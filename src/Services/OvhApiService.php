@@ -2,7 +2,6 @@
 
 namespace RoyalMultiGamers\FirewallOVHGames\Services;
 
-use Ovh\Api;
 use RoyalMultiGamers\FirewallOVHGames\Exceptions\OvhApiException;
 use RoyalMultiGamers\FirewallOVHGames\Models\OvhFirewallSetting;
 use RoyalMultiGamers\FirewallOVHGames\Helpers\PortRangeHelper;
@@ -10,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class OvhApiService
 {
-    protected ?Api $client = null;
+    protected ?OvhHttpClient $client = null;
     protected ?OvhFirewallSetting $settings = null;
     protected array $rulesCache = [];
 
@@ -25,16 +24,10 @@ class OvhApiService
     /**
      * Get or create the OVH API client.
      */
-    protected function getClient(): Api
+    protected function getClient(): OvhHttpClient
     {
         if ($this->client !== null) {
             return $this->client;
-        }
-
-        if (!class_exists(Api::class)) {
-            throw OvhApiException::connectionFailed(
-                'OVH PHP SDK is not installed. Run "composer require ovh/ovh" in the panel root, then restart queue workers.'
-            );
         }
 
         if (!$this->settings->hasCredentials()) {
@@ -42,7 +35,7 @@ class OvhApiService
         }
 
         try {
-            $this->client = new Api(
+            $this->client = new OvhHttpClient(
                 $this->settings->application_key,
                 $this->settings->application_secret,
                 $this->settings->endpoint,

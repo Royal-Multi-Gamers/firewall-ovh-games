@@ -77,4 +77,19 @@ return [
         // Number of days to keep sync logs
         'retention_days' => env('OVH_FIREWALL_LOG_RETENTION_DAYS', 30),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Node IP Discovery
+    |--------------------------------------------------------------------------
+    |
+    | Controls which node IPs should be auto-discovered when running
+    | firewall:sync-node-ips.
+    |
+    */
+
+    'discovery' => [
+        // Ignore common Docker bridge/compose ranges (172.17.0.0/16 - 172.31.0.0/16)
+        'ignore_docker_ips' => env('OVH_FIREWALL_IGNORE_DOCKER_IPS', true),
+    ],
 ];

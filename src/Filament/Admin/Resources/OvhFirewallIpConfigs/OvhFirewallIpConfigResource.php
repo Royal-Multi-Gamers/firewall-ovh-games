@@ -109,6 +109,7 @@ class OvhFirewallIpConfigResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated([10, 25, 50])
             ->columns([
                 TextColumn::make('node.name')
                     ->label(__('firewall::firewall.ip_configs.node'))
@@ -184,5 +185,10 @@ class OvhFirewallIpConfigResource extends Resource
             'create' => Pages\CreateOvhFirewallIpConfig::route('/create'),
             'edit' => Pages\EditOvhFirewallIpConfig::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()->with('node');
     }
 }

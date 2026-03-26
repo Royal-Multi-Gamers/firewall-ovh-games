@@ -183,6 +183,7 @@ class OvhFirewallSyncLogResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated([10, 25, 50])
             ->columns([
                 TextColumn::make('ip')
                     ->label(__('firewall::firewall.sync_logs.ip'))
