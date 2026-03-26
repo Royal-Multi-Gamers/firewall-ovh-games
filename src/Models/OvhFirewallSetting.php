@@ -43,19 +43,16 @@ class OvhFirewallSetting extends Model
         'consumer_key',
     ];
 
-    protected static ?self $instance = null;
-
     /**
-     * Get the singleton instance of settings with cache.
+     * Get the current settings, using a short-lived cache so queue workers
+     * always pick up changes within a few seconds after an admin save.
+     * No static in-memory instance — that would survive worker process restarts
+     * and cause stale reads across jobs.
      */
     public static function getInstance(): self
     {
-        if (self::$instance !== null) {
-            return self::$instance;
-        }
-
         try {
-            $settings = Cache::remember('firewall.settings', 3600, function () {
+            return Cache::remember('firewall.settings', 30, function () {
                 $setting = self::first();
 
                 if (!$setting) {
@@ -70,9 +67,6 @@ class OvhFirewallSetting extends Model
 
                 return $setting;
             });
-
-            self::$instance = $settings;
-            return $settings;
         } catch (\Exception $e) {
             $instance = new static();
             $instance->endpoint = 'ovh-eu';
@@ -90,7 +84,6 @@ class OvhFirewallSetting extends Model
         static::saved(function () {
             Cache::forget('firewall.settings');
             Cache::forget('firewall.stats');
-            self::$instance = null;
         });
     }
 

@@ -11,12 +11,10 @@ use Illuminate\Support\Facades\Log;
 class AllocationObserver
 {
     protected FirewallSyncService $syncService;
-    protected OvhFirewallSetting $settings;
 
     public function __construct(FirewallSyncService $syncService)
     {
         $this->syncService = $syncService;
-        $this->settings = OvhFirewallSetting::getInstance();
     }
 
     /**
@@ -100,10 +98,12 @@ class AllocationObserver
 
     /**
      * Check if sync should be performed.
+     * Always reads fresh settings so worker processes pick up admin changes.
      */
     protected function shouldSync(): bool
     {
-        return $this->settings->sync_enabled && $this->settings->sync_on_events;
+        $settings = OvhFirewallSetting::getInstance();
+        return $settings->sync_enabled && $settings->sync_on_events;
     }
 
     /**

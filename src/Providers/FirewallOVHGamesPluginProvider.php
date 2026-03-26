@@ -4,6 +4,9 @@ namespace RoyalMultiGamers\FirewallOVHGames\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Console\Events\CommandFinished;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Event;
 use App\Models\Role;
 use App\Models\Allocation;
 use RoyalMultiGamers\FirewallOVHGames\Models\OvhFirewallSetting;
@@ -50,6 +53,23 @@ class FirewallOVHGamesPluginProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Restart queue workers after any plugin lifecycle command so workers
+        // pick up newly installed/removed/toggled plugin code automatically.
+        Event::listen(CommandFinished::class, function (CommandFinished $event) {
+            $lifecycleCommands = [
+                'p:plugin:install',
+                'p:plugin:uninstall',
+                'p:plugin:enable',
+                'p:plugin:disable',
+            ];
+
+            if (in_array($event->command, $lifecycleCommands, true)) {
+                Artisan::call('optimize:clear');
+                Artisan::call('filament:optimize');
+                Artisan::call('queue:restart');
+            }
+        });
+
         // Load translations
         $this->loadTranslationsFrom(
             plugin_path('firewall-ovh-games', 'lang'),
@@ -93,7 +113,7 @@ class FirewallOVHGamesPluginProvider extends ServiceProvider
                             // Queue full sync job via panel scheduler
                             $schedule->job(new SyncFirewallRulesJob(), config('firewall-ovh-games.sync.queue_name', 'default'))
                                 ->cron("*/{$interval} * * * *")
-                                ->withoutOverlapping();
+                                ->withoutOverlapping(10);
                         }
 
                         // Cleanup old sync logs daily to keep admin pages responsive

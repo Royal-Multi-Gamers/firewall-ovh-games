@@ -15,12 +15,19 @@ use Illuminate\Support\Collection;
 class FirewallSyncService
 {
     protected OvhApiService $ovhApi;
-    protected OvhFirewallSetting $settings;
 
     public function __construct(OvhApiService $ovhApi)
     {
         $this->ovhApi = $ovhApi;
-        $this->settings = OvhFirewallSetting::getInstance();
+    }
+
+    /**
+     * Always read settings fresh from cache/DB so queue workers pick up
+     * admin changes without needing a restart.
+     */
+    protected function settings(): OvhFirewallSetting
+    {
+        return OvhFirewallSetting::getInstance();
     }
 
     /**
@@ -271,7 +278,7 @@ class FirewallSyncService
             'action' => 'add',
             'status' => 'pending',
             'port' => $port,
-            'protocol' => $this->settings->default_protocol,
+            'protocol' => $this->settings()->default_protocol,
         ]);
 
         try {
@@ -279,7 +286,7 @@ class FirewallSyncService
                 $this->getIpConfigValue($ipConfig, 'ovh_ip'),
                 $this->getIpConfigValue($ipConfig, 'ovh_ip_on_game'),
                 $port,
-                $this->settings->default_protocol
+                $this->settings()->default_protocol
             );
 
             $log->markAsSuccessful("Firewall rule added for port {$port}");
