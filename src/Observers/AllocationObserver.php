@@ -87,7 +87,7 @@ class AllocationObserver
         ]);
 
         // Create a temporary allocation object with no server to trigger removal
-        $tempAllocation = new Allocation([
+        $tempAllocation = (new Allocation())->forceFill([
             'ip' => $allocation->ip,
             'port' => $allocation->port,
             'server_id' => null,
@@ -112,7 +112,7 @@ class AllocationObserver
     protected function dispatchSync(Allocation $allocation): void
     {
         if (config('firewall-ovh-games.sync.use_queue', false)) {
-            SyncAllocationJob::dispatch($allocation)
+            dispatch(SyncAllocationJob::fromAllocation($allocation))
                 ->onQueue(config('firewall-ovh-games.sync.queue_name', 'default'));
         } else {
             // Run after response to avoid slowing down panel requests
@@ -132,7 +132,7 @@ class AllocationObserver
     protected function dispatchPortChangeSync(Allocation $allocation, int $oldPort): void
     {
         if (config('firewall-ovh-games.sync.use_queue', false)) {
-            SyncAllocationJob::dispatch($allocation, $oldPort)
+            dispatch(SyncAllocationJob::fromAllocation($allocation, $oldPort))
                 ->onQueue(config('firewall-ovh-games.sync.queue_name', 'default'));
         } else {
             dispatch(function () use ($allocation, $oldPort) {

@@ -33,10 +33,12 @@ class FirewallSyncService
     /**
      * Synchronize all allocations with OVH firewall rules.
      */
-    public function syncAllAllocations(): array
+    public function syncAllAllocations(bool $dryRun = false): array
     {
+        $this->ovhApi->flushRulesCache();
+
         if ($this->shouldLogDetailed()) {
-            Log::info('Starting full firewall synchronization');
+            Log::info('Starting full firewall synchronization', ['dry_run' => $dryRun]);
         }
 
         $results = [
@@ -57,7 +59,7 @@ class FirewallSyncService
 
         foreach ($ips as $ip) {
             try {
-                $ipResult = $this->syncIpAllocations($ip);
+                $ipResult = $this->syncIpAllocations($ip, $dryRun);
                 $results['total'] += $ipResult['total'];
                 $results['success'] += $ipResult['success'];
                 $results['failed'] += $ipResult['failed'];
@@ -86,10 +88,12 @@ class FirewallSyncService
     /**
      * Synchronize allocations for a specific IP.
      */
-    public function syncIpAllocations(string $ip): array
+    public function syncIpAllocations(string $ip, bool $dryRun = false): array
     {
+        $this->ovhApi->flushRulesCache();
+
         if ($this->shouldLogDetailed()) {
-            Log::info('Syncing allocations for IP', ['ip' => $ip]);
+            Log::info('Syncing allocations for IP', ['ip' => $ip, 'dry_run' => $dryRun]);
         }
 
         // Get IP configuration
@@ -154,6 +158,18 @@ class FirewallSyncService
                 ]);
             }
 
+            if ($dryRun) {
+                $unusedPorts = $ovhPorts->diff($panelPorts);
+
+                return array_merge($results, [
+                    'total' => $missingPorts->count() + $unusedPorts->count(),
+                    'added' => $missingPorts->count(),
+                    'removed' => $unusedPorts->count(),
+                    'ports_to_add' => $missingPorts->values()->all(),
+                    'ports_to_remove' => $unusedPorts->values()->all(),
+                ]);
+            }
+
             foreach ($missingPorts as $port) {
                 $results['total']++;
                 if ($this->addRule($ipConfig, $port)) {
@@ -200,6 +216,8 @@ class FirewallSyncService
      */
     public function syncAllocation(Allocation $allocation): bool
     {
+        $this->ovhApi->flushRulesCache();
+
         if ($this->shouldLogDetailed()) {
             Log::info('Syncing single allocation', [
                 'allocation_id' => $allocation->id,
@@ -231,6 +249,8 @@ class FirewallSyncService
 
     public function syncAllocationPortChange(Allocation $allocation, int $oldPort): bool
     {
+        $this->ovhApi->flushRulesCache();
+
         if ($this->shouldLogDetailed()) {
             Log::info('Syncing allocation port change', [
                 'allocation_id' => $allocation->id,
@@ -527,9 +547,20 @@ class FirewallSyncService
         $ovhIpOnGame = (string) $this->getIpConfigValue($ipConfig, 'ovh_ip_on_game');
 
         for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
-            $exists = $this->ovhApi->ruleExistsForPort($ovhIp, $ovhIpOnGame, $port);
-            if (!$exists) {
-                return true;
+            // Bypass the rules cache, otherwise every attempt after the first
+            // would reuse the same stale answer.
+            $this->ovhApi->flushRulesCache();
+
+            try {
+                if (!$this->ovhApi->ruleExistsForPort($ovhIp, $ovhIpOnGame, $port)) {
+                    return true;
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to check OVH rule deletion state', [
+                    'port' => $port,
+                    'attempt' => $attempt,
+                    'error' => $e->getMessage(),
+                ]);
             }
 
             usleep($delayMs * 1000);

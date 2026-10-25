@@ -13,6 +13,7 @@ return [
         'endpoint_help' => 'Sélectionnez votre région de point de terminaison API OVH',
         'consumer_key' => 'Clé Consommateur',
         'consumer_key_help' => 'Votre clé consommateur API OVH',
+        'secret_unchanged' => 'Laisser vide pour conserver la valeur actuelle',
         'sync_configuration' => 'Configuration de Synchronisation',
         'sync_configuration_description' => 'Configurez comment et quand les règles de pare-feu sont synchronisées',
         'sync_enabled' => 'Activer la Synchronisation Automatique',

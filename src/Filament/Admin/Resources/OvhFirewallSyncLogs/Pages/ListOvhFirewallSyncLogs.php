@@ -23,6 +23,7 @@ class ListOvhFirewallSyncLogs extends ListRecords
                 ->modalHeading(__('firewall-ovh-games::firewall.sync_logs.delete_all_confirm'))
                 ->modalDescription(__('firewall-ovh-games::firewall.sync_logs.delete_all_description'))
                 ->modalSubmitActionLabel(__('firewall-ovh-games::firewall.sync_logs.delete_all_submit'))
+                ->visible(fn () => auth()->user()?->can('delete', OvhFirewallSyncLog::class) ?? false)
                 ->action(function () {
                     $deleted = OvhFirewallSyncLog::query()->delete();
 
@@ -42,6 +43,7 @@ class ListOvhFirewallSyncLogs extends ListRecords
                 ->color('warning')
                 ->requiresConfirmation()
                 ->modalDescription(__('firewall-ovh-games::firewall.sync_logs.cleanup_description'))
+                ->visible(fn () => auth()->user()?->can('delete', OvhFirewallSyncLog::class) ?? false)
                 ->action(function () {
                     $deleted = OvhFirewallSyncLog::cleanupOldLogs();
 

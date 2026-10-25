@@ -72,13 +72,14 @@ class PortRangeHelper
      */
     public static function getSinglePort(string|array $range): ?int
     {
-        if (!self::isSinglePort($range)) {
+        // A single malformed rule from the API must not abort a whole sync.
+        try {
+            $parsed = self::parsePortRange($range);
+        } catch (\InvalidArgumentException) {
             return null;
         }
 
-        $parsed = self::parsePortRange($range);
-        
-        return $parsed['start'];
+        return $parsed['start'] === $parsed['end'] ? $parsed['start'] : null;
     }
 
     /**

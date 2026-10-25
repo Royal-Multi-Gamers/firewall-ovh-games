@@ -87,11 +87,14 @@ class FirewallOVHGamesPluginProvider extends ServiceProvider
                         $settings = OvhFirewallSetting::getInstance();
 
                         if ($settings->sync_enabled) {
-                            $interval = $settings->sync_interval ?? 5;
+                            $interval = max(1, (int) ($settings->sync_interval ?? 5));
+
+                            // "*/60" is not a valid minute step: run hourly instead.
+                            $cron = $interval >= 60 ? '0 * * * *' : "*/{$interval} * * * *";
 
                             // Queue full sync job via panel scheduler
                             $schedule->job(new SyncFirewallRulesJob(), config('firewall-ovh-games.sync.queue_name', 'default'))
-                                ->cron("*/{$interval} * * * *")
+                                ->cron($cron)
                                 ->withoutOverlapping(10);
                         }
 

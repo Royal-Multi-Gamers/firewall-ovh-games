@@ -30,6 +30,9 @@ class OvhFirewallSetting extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
+        // Encrypted at rest with APP_KEY (also keeps them encrypted in the settings cache).
+        'application_secret' => 'encrypted',
+        'consumer_key' => 'encrypted',
         'sync_enabled' => 'boolean',
         'sync_on_events' => 'boolean',
         'sync_interval' => 'integer',

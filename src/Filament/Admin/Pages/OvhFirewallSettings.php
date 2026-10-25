@@ -13,6 +13,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Concerns\InteractsWithHeaderActions;
 use Filament\Pages\Page;
+use Illuminate\Validation\ValidationException;
 use RoyalMultiGamers\FirewallOVHGames\Jobs\SyncFirewallRulesJob;
 use RoyalMultiGamers\FirewallOVHGames\Models\OvhFirewallSetting;
 use RoyalMultiGamers\FirewallOVHGames\Services\OvhApiService;
@@ -55,18 +56,35 @@ class OvhFirewallSettings extends Page implements HasSchemas
 
     public function mount(): void
     {
-        $settings = OvhFirewallSetting::getInstance();
-        
+        $this->fillForm(OvhFirewallSetting::getInstance());
+    }
+
+    /**
+     * Secrets are never sent back to the browser (Livewire state is public):
+     * the fields stay empty and keep the stored value unless a new one is typed.
+     */
+    protected function fillForm(OvhFirewallSetting $settings): void
+    {
         $this->form->fill([
             'application_key' => $settings->application_key,
-            'application_secret' => $settings->application_secret,
+            'application_secret' => null,
             'endpoint' => $settings->endpoint,
-            'consumer_key' => $settings->consumer_key,
+            'consumer_key' => null,
             'sync_enabled' => $settings->sync_enabled,
             'sync_interval' => $settings->sync_interval,
             'sync_on_events' => $settings->sync_on_events,
             'default_protocol' => $settings->default_protocol,
         ]);
+    }
+
+    protected function canUpdateSettings(): bool
+    {
+        return auth()->user()?->can('update', OvhFirewallSetting::class) ?? false;
+    }
+
+    protected function hasStoredSecret(string $key): bool
+    {
+        return filled(OvhFirewallSetting::getInstance()->{$key});
     }
 
     protected function getFormSchema(): array
@@ -83,7 +101,9 @@ class OvhFirewallSettings extends Page implements HasSchemas
 
                     TextInput::make('application_secret')
                         ->label(__('firewall-ovh-games::firewall.settings.application_secret'))
-                        ->required()
+                        ->required(fn () => !$this->hasStoredSecret('application_secret'))
+                        ->dehydrated(fn (?string $state) => filled($state))
+                        ->placeholder(fn () => $this->hasStoredSecret('application_secret') ? __('firewall-ovh-games::firewall.settings.secret_unchanged') : null)
                         ->password()
                         ->revealable()
                         ->maxLength(255)
@@ -98,7 +118,9 @@ class OvhFirewallSettings extends Page implements HasSchemas
 
                     TextInput::make('consumer_key')
                         ->label(__('firewall-ovh-games::firewall.settings.consumer_key'))
-                        ->required()
+                        ->required(fn () => !$this->hasStoredSecret('consumer_key'))
+                        ->dehydrated(fn (?string $state) => filled($state))
+                        ->placeholder(fn () => $this->hasStoredSecret('consumer_key') ? __('firewall-ovh-games::firewall.settings.secret_unchanged') : null)
                         ->password()
                         ->revealable()
                         ->maxLength(255)
@@ -158,12 +180,14 @@ class OvhFirewallSettings extends Page implements HasSchemas
                 ->label(__('firewall-ovh-games::firewall.settings.save'))
                 ->icon('tabler-device-floppy')
                 ->action('save')
+                ->visible(fn () => $this->canUpdateSettings())
                 ->keyBindings(['mod+s']),
 
             Action::make('test_connection')
                 ->label(__('firewall-ovh-games::firewall.settings.test_connection'))
                 ->icon('tabler-plug-connected')
                 ->color('info')
+                ->visible(fn () => $this->canUpdateSettings())
                 ->action('testConnection'),
 
             Action::make('sync_now')
@@ -171,17 +195,21 @@ class OvhFirewallSettings extends Page implements HasSchemas
                 ->icon('tabler-refresh')
                 ->color('success')
                 ->requiresConfirmation()
+                ->visible(fn () => $this->canUpdateSettings())
                 ->action('syncNow'),
         ];
     }
 
     public function save(): void
     {
+        // Livewire methods are callable directly: hiding the action is not enough.
+        abort_unless($this->canUpdateSettings(), 403);
+
         try {
             $data = $this->form->getState();
 
             $settings = OvhFirewallSetting::getInstance();
-            
+
             // Update or create the settings
             if ($settings->exists) {
                 $settings->update($data);
@@ -190,22 +218,14 @@ class OvhFirewallSettings extends Page implements HasSchemas
                 $settings->save();
             }
 
-            // Refresh the form with saved data
-            $this->form->fill([
-                'application_key' => $settings->application_key,
-                'application_secret' => $settings->application_secret,
-                'endpoint' => $settings->endpoint,
-                'consumer_key' => $settings->consumer_key,
-                'sync_enabled' => $settings->sync_enabled,
-                'sync_interval' => $settings->sync_interval,
-                'sync_on_events' => $settings->sync_on_events,
-                'default_protocol' => $settings->default_protocol,
-            ]);
+            $this->fillForm($settings);
 
             Notification::make()
                 ->title(__('firewall-ovh-games::firewall.settings.saved'))
                 ->success()
                 ->send();
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Notification::make()
                 ->title(__('firewall-ovh-games::firewall.settings.save_failed'))
@@ -217,6 +237,8 @@ class OvhFirewallSettings extends Page implements HasSchemas
 
     public function testConnection(): void
     {
+        abort_unless($this->canUpdateSettings(), 403);
+
         try {
             $ovhApi = app(OvhApiService::class);
             $ovhApi->testConnection();
@@ -237,6 +259,8 @@ class OvhFirewallSettings extends Page implements HasSchemas
 
     public function syncNow(): void
     {
+        abort_unless($this->canUpdateSettings(), 403);
+
         try {
             SyncFirewallRulesJob::dispatch()
                 ->onQueue(config('firewall-ovh-games.sync.queue_name', 'default'));

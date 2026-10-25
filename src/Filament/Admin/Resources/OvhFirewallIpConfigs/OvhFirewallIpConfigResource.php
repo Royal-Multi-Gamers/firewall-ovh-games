@@ -71,6 +71,7 @@ class OvhFirewallIpConfigResource extends Resource
                         TextInput::make('panel_ip')
                             ->label(__('firewall-ovh-games::firewall.ip_configs.panel_ip'))
                             ->required()
+                            ->ip()
                             ->unique(ignoreRecord: true)
                             ->helperText(__('firewall-ovh-games::firewall.ip_configs.panel_ip_help')),
                     ])
@@ -81,11 +82,13 @@ class OvhFirewallIpConfigResource extends Resource
                         TextInput::make('ovh_ip')
                             ->label(__('firewall-ovh-games::firewall.ip_configs.ovh_ip'))
                             ->required()
+                            ->rules(['regex:/^[0-9a-fA-F:.]+(\/[0-9]{1,3})?$/'])
                             ->helperText(__('firewall-ovh-games::firewall.ip_configs.ovh_ip_help')),
 
                         TextInput::make('ovh_ip_on_game')
                             ->label(__('firewall-ovh-games::firewall.ip_configs.ovh_ip_on_game'))
                             ->required()
+                            ->ip()
                             ->helperText(__('firewall-ovh-games::firewall.ip_configs.ovh_ip_on_game_help')),
                     ])
                     ->columns(2),

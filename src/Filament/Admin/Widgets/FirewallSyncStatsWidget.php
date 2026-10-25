@@ -17,8 +17,6 @@ class FirewallSyncStatsWidget extends BaseWidget
     protected function getStats(): array
     {
         $stats = cache()->remember('firewall.stats', 60, function () {
-            $settings = OvhFirewallSetting::getInstance();
-            
             $configuredIps = OvhFirewallIpConfig::enabled()->count();
             $totalAllocations = Allocation::whereNotNull('server_id')->count();
             
@@ -36,7 +34,6 @@ class FirewallSyncStatsWidget extends BaseWidget
                 ->first();
 
             return [
-                'settings' => $settings,
                 'configured_ips' => $configuredIps,
                 'total_allocations' => $totalAllocations,
                 'successful_syncs' => $successfulSyncs,
@@ -44,6 +41,10 @@ class FirewallSyncStatsWidget extends BaseWidget
                 'last_sync' => $lastSync,
             ];
         });
+
+        // Read outside the stats cache: caching the settings model there kept a
+        // second copy of the credentials alive for 60s after an admin change.
+        $syncEnabled = (bool) OvhFirewallSetting::getInstance()->sync_enabled;
 
         return [
             Stat::make(__('firewall-ovh-games::firewall.widgets.configured_ips'), $stats['configured_ips'])
@@ -74,13 +75,13 @@ class FirewallSyncStatsWidget extends BaseWidget
                 ->color($stats['last_sync'] && $stats['last_sync']->synced_at->isToday() ? 'success' : 'warning'),
 
             Stat::make(__('firewall-ovh-games::firewall.widgets.sync_status'), 
-                $stats['settings']->sync_enabled 
+                $syncEnabled 
                     ? __('firewall-ovh-games::firewall.widgets.enabled') 
                     : __('firewall-ovh-games::firewall.widgets.disabled')
             )
                 ->description(__('firewall-ovh-games::firewall.widgets.automatic_sync'))
-                ->descriptionIcon($stats['settings']->sync_enabled ? 'tabler-check' : 'tabler-x')
-                ->color($stats['settings']->sync_enabled ? 'success' : 'danger'),
+                ->descriptionIcon($syncEnabled ? 'tabler-check' : 'tabler-x')
+                ->color($syncEnabled ? 'success' : 'danger'),
         ];
     }
 

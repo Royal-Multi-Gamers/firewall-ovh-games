@@ -13,6 +13,7 @@ return [
         'endpoint_help' => 'Select your OVH API endpoint region',
         'consumer_key' => 'Consumer Key',
         'consumer_key_help' => 'Your OVH API consumer key',
+        'secret_unchanged' => 'Leave empty to keep the current value',
         'sync_configuration' => 'Synchronization Configuration',
         'sync_configuration_description' => 'Configure how and when firewall rules are synchronized',
         'sync_enabled' => 'Enable Automatic Sync',

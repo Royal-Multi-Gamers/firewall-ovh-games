@@ -44,7 +44,9 @@ class SyncFirewallRulesCommand extends Command
         $this->info('Starting firewall synchronization...');
         $this->newLine();
 
-        if ($this->option('dry-run')) {
+        $dryRun = (bool) $this->option('dry-run');
+
+        if ($dryRun) {
             $this->warn('DRY RUN MODE - No changes will be made');
             $this->newLine();
         }
@@ -55,11 +57,11 @@ class SyncFirewallRulesCommand extends Command
             if ($specificIp) {
                 // Sync specific IP
                 $this->info("Syncing IP: {$specificIp}");
-                $results = $this->syncSpecificIp($syncService, $specificIp);
+                $results = $this->syncSpecificIp($syncService, $specificIp, $dryRun);
             } else {
                 // Sync all IPs
                 $this->info('Syncing all configured IPs...');
-                $results = $syncService->syncAllAllocations();
+                $results = $syncService->syncAllAllocations($dryRun);
             }
 
             $this->newLine();
@@ -74,7 +76,9 @@ class SyncFirewallRulesCommand extends Command
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error('Synchronization failed: ' . $e->getMessage());
-            $this->error($e->getTraceAsString());
+            if ($this->output->isVerbose()) {
+                $this->error($e->getTraceAsString());
+            }
             return self::FAILURE;
         }
     }
@@ -82,7 +86,7 @@ class SyncFirewallRulesCommand extends Command
     /**
      * Sync a specific IP.
      */
-    protected function syncSpecificIp(FirewallSyncService $syncService, string $ip): array
+    protected function syncSpecificIp(FirewallSyncService $syncService, string $ip, bool $dryRun = false): array
     {
         $ipConfig = OvhFirewallIpConfig::getForPanelIp($ip);
 
@@ -106,7 +110,7 @@ class SyncFirewallRulesCommand extends Command
             ];
         }
 
-        return $syncService->syncIpAllocations($ip);
+        return $syncService->syncIpAllocations($ip, $dryRun);
     }
 
     /**
@@ -136,6 +140,8 @@ class SyncFirewallRulesCommand extends Command
             $this->info("Rules Updated: {$results['updated']}");
         }
 
+        $this->displayPlannedPorts($results);
+
         // Display per-IP details if available
         if (isset($results['details']) && is_array($results['details'])) {
             $this->newLine();
@@ -151,8 +157,23 @@ class SyncFirewallRulesCommand extends Command
                     $removed = $ipResults['removed'] ?? 0;
                     
                     $this->line("  {$ip}: Success: {$success}, Failed: {$failed}, Added: {$added}, Removed: {$removed}");
+                    $this->displayPlannedPorts($ipResults, '    ');
                 }
             }
+        }
+    }
+
+    /**
+     * Display ports that a dry run would add/remove.
+     */
+    protected function displayPlannedPorts(array $results, string $indent = ''): void
+    {
+        if (!empty($results['ports_to_add'])) {
+            $this->line($indent . 'Would add: ' . implode(', ', $results['ports_to_add']));
+        }
+
+        if (!empty($results['ports_to_remove'])) {
+            $this->line($indent . 'Would remove: ' . implode(', ', $results['ports_to_remove']));
         }
     }
 }

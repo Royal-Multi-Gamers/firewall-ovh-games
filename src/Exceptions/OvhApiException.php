@@ -75,6 +75,14 @@ class OvhApiException extends Exception
     }
 
     /**
+     * Create an exception for an invalid IP / CIDR value.
+     */
+    public static function invalidIp(string $ip): self
+    {
+        return new self("Invalid IP address or CIDR block: '{$ip}'");
+    }
+
+    /**
      * Create an exception for rate limiting.
      */
     public static function rateLimitExceeded(): self

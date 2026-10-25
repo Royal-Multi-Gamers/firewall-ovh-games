@@ -79,10 +79,6 @@ class OvhHttpClient
     protected function decodeResponse(Response $response, string $path): mixed
     {
         if ($response->successful()) {
-            if (strtoupper($response->header('Content-Type', '')) && str_contains((string) $response->header('Content-Type', ''), 'application/json')) {
-                return $response->json();
-            }
-
             $json = $response->json();
             if ($json !== null) {
                 return $json;
@@ -91,16 +87,19 @@ class OvhHttpClient
             return $response->body();
         }
 
+        if ($response->status() === 429) {
+            throw OvhApiException::rateLimitExceeded();
+        }
+
         $payload = $response->json();
         $reason = is_array($payload)
             ? ($payload['message'] ?? $payload['error'] ?? $response->body())
             : $response->body();
 
-        if ($response->status() === 429) {
-            throw OvhApiException::rateLimitExceeded();
-        }
+        // Keep error messages short: they end up in logs, DB and admin notifications.
+        $reason = mb_substr(trim(strip_tags((string) $reason)), 0, 500);
 
-        throw OvhApiException::requestFailed($path, trim((string) $reason));
+        throw OvhApiException::requestFailed($path, "HTTP {$response->status()} {$reason}");
     }
 
     protected function resolveBaseUrl(string $endpoint): string
