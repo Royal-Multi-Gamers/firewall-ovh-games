@@ -20,7 +20,7 @@ class ListOvhFirewallIpConfigs extends ListRecords
                 ->icon('tabler-plus'),
 
             Action::make('sync_from_nodes')
-                ->label(__('firewall::firewall.ip_configs.sync_from_nodes'))
+                ->label(__('firewall-ovh-games::firewall.ip_configs.sync_from_nodes'))
                 ->icon('tabler-refresh')
                 ->color('info')
                 ->action(function () {
@@ -29,8 +29,8 @@ class ListOvhFirewallIpConfigs extends ListRecords
 
                         if (count($result['created']) > 0) {
                             Notification::make()
-                                ->title(__('firewall::firewall.ip_configs.sync_success'))
-                                ->body(__('firewall::firewall.ip_configs.sync_success_body', [
+                                ->title(__('firewall-ovh-games::firewall.ip_configs.sync_success'))
+                                ->body(__('firewall-ovh-games::firewall.ip_configs.sync_success_body', [
                                     'count' => count($result['created']),
                                     'total' => $result['total_node_ips'],
                                 ]))
@@ -38,8 +38,8 @@ class ListOvhFirewallIpConfigs extends ListRecords
                                 ->send();
                         } else {
                             Notification::make()
-                                ->title(__('firewall::firewall.ip_configs.sync_no_new'))
-                                ->body(__('firewall::firewall.ip_configs.sync_no_new_body', [
+                                ->title(__('firewall-ovh-games::firewall.ip_configs.sync_no_new'))
+                                ->body(__('firewall-ovh-games::firewall.ip_configs.sync_no_new_body', [
                                     'total' => $result['total_node_ips'],
                                 ]))
                                 ->info()
@@ -50,7 +50,7 @@ class ListOvhFirewallIpConfigs extends ListRecords
                         $this->dispatch('$refresh');
                     } catch (\Exception $e) {
                         Notification::make()
-                            ->title(__('firewall::firewall.ip_configs.sync_failed'))
+                            ->title(__('firewall-ovh-games::firewall.ip_configs.sync_failed'))
                             ->body($e->getMessage())
                             ->danger()
                             ->send();

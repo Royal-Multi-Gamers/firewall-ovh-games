@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Check tag matches plugin.json version
+        run: |
+          TAG="$GITHUB_REF_NAME"
+          VERSION="$(jq -r .version plugin.json)"
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "Tag $TAG != plugin.json version $VERSION"
+            exit 1
+          fi
+
+      - name: Build zip
+        run: git archive --format=zip --prefix=firewall-ovh-games/ -o firewall-ovh-games.zip "$GITHUB_REF_NAME"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" firewall-ovh-games.zip --title "$GITHUB_REF_NAME" --generate-notes
+
+      - name: Update update.json
+        run: |
+          VERSION="$GITHUB_REF_NAME"
+          jq --arg v "$VERSION" --arg u "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/firewall-ovh-games.zip" \
+            '.["*"] = {version: $v, download_url: $u}' update.json > update.tmp && mv update.tmp update.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add update.json
+          git diff --cached --quiet || git commit -m "Update update.json for $GITHUB_REF_NAME"
+          git push origin main

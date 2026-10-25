@@ -35,66 +35,66 @@ class OvhFirewallSyncLogResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('firewall::firewall.sync_logs.title');
+        return __('firewall-ovh-games::firewall.sync_logs.title');
     }
 
     public static function getModelLabel(): string
     {
-        return __('firewall::firewall.sync_logs.singular');
+        return __('firewall-ovh-games::firewall.sync_logs.singular');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('firewall::firewall.sync_logs.plural');
+        return __('firewall-ovh-games::firewall.sync_logs.plural');
     }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->schema([
-                Section::make(__('firewall::firewall.sync_logs.log_details'))
+                Section::make(__('firewall-ovh-games::firewall.sync_logs.log_details'))
                     ->schema([
                         TextInput::make('ip')
-                            ->label(__('firewall::firewall.sync_logs.ip'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.ip'))
                             ->disabled(),
 
                         TextInput::make('ip_on_game')
-                            ->label(__('firewall::firewall.sync_logs.ip_on_game'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.ip_on_game'))
                             ->disabled(),
 
                         TextInput::make('action')
-                            ->label(__('firewall::firewall.sync_logs.action'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.action'))
                             ->disabled(),
 
                         TextInput::make('status')
-                            ->label(__('firewall::firewall.sync_logs.status'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.status'))
                             ->disabled(),
 
                         TextInput::make('port')
-                            ->label(__('firewall::firewall.sync_logs.port'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.port'))
                             ->disabled(),
 
                         TextInput::make('protocol')
-                            ->label(__('firewall::firewall.sync_logs.protocol'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.protocol'))
                             ->disabled(),
 
                         TextInput::make('rule_id')
-                            ->label(__('firewall::firewall.sync_logs.rule_id'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.rule_id'))
                             ->disabled(),
 
                         Textarea::make('message')
-                            ->label(__('firewall::firewall.sync_logs.message'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.message'))
                             ->disabled()
                             ->columnSpanFull(),
 
                         Textarea::make('error')
-                            ->label(__('firewall::firewall.sync_logs.error'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.error'))
                             ->disabled()
                             ->columnSpanFull()
                             ->visible(fn (?OvhFirewallSyncLog $record) => $record && $record->error),
 
                         KeyValue::make('details')
-                            ->label(__('firewall::firewall.sync_logs.details'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.details'))
                             ->disabled()
                             ->columnSpanFull()
                             ->visible(fn (?OvhFirewallSyncLog $record) => $record && $record->details),
@@ -107,21 +107,21 @@ class OvhFirewallSyncLogResource extends Resource
     {
         return $schema
             ->components([
-                Section::make(__('firewall::firewall.sync_logs.log_details'))
+                Section::make(__('firewall-ovh-games::firewall.sync_logs.log_details'))
                     ->columns(['default' => 1, 'md' => 2])
                     ->schema([
                         TextEntry::make('ip')
-                            ->label(__('firewall::firewall.sync_logs.ip'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.ip'))
                             ->copyable()
                             ->icon('tabler-server'),
 
                         TextEntry::make('ip_on_game')
-                            ->label(__('firewall::firewall.sync_logs.ip_on_game'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.ip_on_game'))
                             ->copyable()
                             ->icon('tabler-device-gamepad'),
 
                         TextEntry::make('action')
-                            ->label(__('firewall::firewall.sync_logs.action'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.action'))
                             ->badge()
                             ->color(fn (string $state): string => match ($state) {
                                 'add' => 'success',
@@ -132,7 +132,7 @@ class OvhFirewallSyncLogResource extends Resource
                             }),
 
                         TextEntry::make('status')
-                            ->label(__('firewall::firewall.sync_logs.status'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.status'))
                             ->badge()
                             ->color(fn (string $state): string => match ($state) {
                                 'success' => 'success',
@@ -142,36 +142,36 @@ class OvhFirewallSyncLogResource extends Resource
                             }),
 
                         TextEntry::make('port')
-                            ->label(__('firewall::firewall.sync_logs.port'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.port'))
                             ->badge()
                             ->color('info'),
 
                         TextEntry::make('protocol')
-                            ->label(__('firewall::firewall.sync_logs.protocol'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.protocol'))
                             ->badge(),
 
                         TextEntry::make('rule_id')
-                            ->label(__('firewall::firewall.sync_logs.rule_id'))
-                            ->placeholder(__('firewall::firewall.sync_logs.no_rule_id'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.rule_id'))
+                            ->placeholder(__('firewall-ovh-games::firewall.sync_logs.no_rule_id'))
                             ->copyable(),
 
                         TextEntry::make('synced_at')
-                            ->label(__('firewall::firewall.sync_logs.synced_at'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.synced_at'))
                             ->dateTime()
                             ->since(),
 
                         TextEntry::make('message')
-                            ->label(__('firewall::firewall.sync_logs.message'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.message'))
                             ->columnSpanFull(),
 
                         TextEntry::make('error')
-                            ->label(__('firewall::firewall.sync_logs.error'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.error'))
                             ->columnSpanFull()
                             ->color('danger')
                             ->visible(fn (?OvhFirewallSyncLog $record) => $record && $record->error),
 
                         TextEntry::make('details')
-                            ->label(__('firewall::firewall.sync_logs.details'))
+                            ->label(__('firewall-ovh-games::firewall.sync_logs.details'))
                             ->columnSpanFull()
                             ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : $state)
                             ->visible(fn (?OvhFirewallSyncLog $record) => $record && $record->details),
@@ -186,20 +186,20 @@ class OvhFirewallSyncLogResource extends Resource
             ->paginated([10, 25, 50])
             ->columns([
                 TextColumn::make('ip')
-                    ->label(__('firewall::firewall.sync_logs.ip'))
+                    ->label(__('firewall-ovh-games::firewall.sync_logs.ip'))
                     ->searchable()
                     ->sortable()
                     ->copyable(),
 
                 TextColumn::make('port')
-                    ->label(__('firewall::firewall.sync_logs.port'))
+                    ->label(__('firewall-ovh-games::firewall.sync_logs.port'))
                     ->searchable()
                     ->sortable()
                     ->badge()
                     ->color('info'),
 
                 TextColumn::make('action')
-                    ->label(__('firewall::firewall.sync_logs.action'))
+                    ->label(__('firewall-ovh-games::firewall.sync_logs.action'))
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'add' => 'success',
@@ -211,7 +211,7 @@ class OvhFirewallSyncLogResource extends Resource
                     ->sortable(),
 
                 TextColumn::make('status')
-                    ->label(__('firewall::firewall.sync_logs.status'))
+                    ->label(__('firewall-ovh-games::firewall.sync_logs.status'))
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'success' => 'success',
@@ -222,24 +222,24 @@ class OvhFirewallSyncLogResource extends Resource
                     ->sortable(),
 
                 TextColumn::make('protocol')
-                    ->label(__('firewall::firewall.sync_logs.protocol'))
+                    ->label(__('firewall-ovh-games::firewall.sync_logs.protocol'))
                     ->searchable()
                     ->toggleable(),
 
                 TextColumn::make('message')
-                    ->label(__('firewall::firewall.sync_logs.message'))
+                    ->label(__('firewall-ovh-games::firewall.sync_logs.message'))
                     ->limit(50)
                     ->searchable()
                     ->toggleable(),
 
                 TextColumn::make('synced_at')
-                    ->label(__('firewall::firewall.sync_logs.synced_at'))
+                    ->label(__('firewall-ovh-games::firewall.sync_logs.synced_at'))
                     ->dateTime()
                     ->sortable()
                     ->since(),
 
                 TextColumn::make('created_at')
-                    ->label(__('firewall::firewall.sync_logs.created_at'))
+                    ->label(__('firewall-ovh-games::firewall.sync_logs.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

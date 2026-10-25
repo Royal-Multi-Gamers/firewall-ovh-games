@@ -41,67 +41,67 @@ class OvhFirewallIpConfigResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('firewall::firewall.ip_configs.title');
+        return __('firewall-ovh-games::firewall.ip_configs.title');
     }
 
     public static function getModelLabel(): string
     {
-        return __('firewall::firewall.ip_configs.singular');
+        return __('firewall-ovh-games::firewall.ip_configs.singular');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('firewall::firewall.ip_configs.plural');
+        return __('firewall-ovh-games::firewall.ip_configs.plural');
     }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->schema([
-                Section::make(__('firewall::firewall.ip_configs.node_information'))
+                Section::make(__('firewall-ovh-games::firewall.ip_configs.node_information'))
                     ->schema([
                         Select::make('node_id')
-                            ->label(__('firewall::firewall.ip_configs.node'))
+                            ->label(__('firewall-ovh-games::firewall.ip_configs.node'))
                             ->relationship('node', 'name')
                             ->searchable()
                             ->preload()
                             ->nullable()
-                            ->helperText(__('firewall::firewall.ip_configs.node_help')),
+                            ->helperText(__('firewall-ovh-games::firewall.ip_configs.node_help')),
 
                         TextInput::make('panel_ip')
-                            ->label(__('firewall::firewall.ip_configs.panel_ip'))
+                            ->label(__('firewall-ovh-games::firewall.ip_configs.panel_ip'))
                             ->required()
                             ->unique(ignoreRecord: true)
-                            ->helperText(__('firewall::firewall.ip_configs.panel_ip_help')),
+                            ->helperText(__('firewall-ovh-games::firewall.ip_configs.panel_ip_help')),
                     ])
                     ->columns(2),
 
-                Section::make(__('firewall::firewall.ip_configs.ovh_mapping'))
+                Section::make(__('firewall-ovh-games::firewall.ip_configs.ovh_mapping'))
                     ->schema([
                         TextInput::make('ovh_ip')
-                            ->label(__('firewall::firewall.ip_configs.ovh_ip'))
+                            ->label(__('firewall-ovh-games::firewall.ip_configs.ovh_ip'))
                             ->required()
-                            ->helperText(__('firewall::firewall.ip_configs.ovh_ip_help')),
+                            ->helperText(__('firewall-ovh-games::firewall.ip_configs.ovh_ip_help')),
 
                         TextInput::make('ovh_ip_on_game')
-                            ->label(__('firewall::firewall.ip_configs.ovh_ip_on_game'))
+                            ->label(__('firewall-ovh-games::firewall.ip_configs.ovh_ip_on_game'))
                             ->required()
-                            ->helperText(__('firewall::firewall.ip_configs.ovh_ip_on_game_help')),
+                            ->helperText(__('firewall-ovh-games::firewall.ip_configs.ovh_ip_on_game_help')),
                     ])
                     ->columns(2),
 
-                Section::make(__('firewall::firewall.ip_configs.configuration'))
+                Section::make(__('firewall-ovh-games::firewall.ip_configs.configuration'))
                     ->schema([
                         Toggle::make('enabled')
-                            ->label(__('firewall::firewall.ip_configs.enabled'))
-                            ->helperText(__('firewall::firewall.ip_configs.enabled_help'))
+                            ->label(__('firewall-ovh-games::firewall.ip_configs.enabled'))
+                            ->helperText(__('firewall-ovh-games::firewall.ip_configs.enabled_help'))
                             ->default(true)
                             ->inline(false),
 
                         Textarea::make('notes')
-                            ->label(__('firewall::firewall.ip_configs.notes'))
+                            ->label(__('firewall-ovh-games::firewall.ip_configs.notes'))
                             ->rows(3)
-                            ->helperText(__('firewall::firewall.ip_configs.notes_help')),
+                            ->helperText(__('firewall-ovh-games::firewall.ip_configs.notes_help')),
                     ]),
             ]);
     }
@@ -112,58 +112,58 @@ class OvhFirewallIpConfigResource extends Resource
             ->paginated([10, 25, 50])
             ->columns([
                 TextColumn::make('node.name')
-                    ->label(__('firewall::firewall.ip_configs.node'))
+                    ->label(__('firewall-ovh-games::firewall.ip_configs.node'))
                     ->searchable()
                     ->sortable()
-                    ->default(__('firewall::firewall.ip_configs.no_node')),
+                    ->default(__('firewall-ovh-games::firewall.ip_configs.no_node')),
 
                 TextColumn::make('panel_ip')
-                    ->label(__('firewall::firewall.ip_configs.panel_ip'))
+                    ->label(__('firewall-ovh-games::firewall.ip_configs.panel_ip'))
                     ->searchable()
                     ->sortable()
                     ->copyable()
                     ->icon('tabler-server'),
 
                 TextColumn::make('ovh_ip')
-                    ->label(__('firewall::firewall.ip_configs.ovh_ip'))
+                    ->label(__('firewall-ovh-games::firewall.ip_configs.ovh_ip'))
                     ->searchable()
                     ->sortable()
                     ->copyable()
                     ->icon('tabler-cloud'),
 
                 TextColumn::make('ovh_ip_on_game')
-                    ->label(__('firewall::firewall.ip_configs.ovh_ip_on_game'))
+                    ->label(__('firewall-ovh-games::firewall.ip_configs.ovh_ip_on_game'))
                     ->searchable()
                     ->copyable()
                     ->icon('tabler-device-gamepad'),
 
                 IconColumn::make('enabled')
-                    ->label(__('firewall::firewall.ip_configs.enabled'))
+                    ->label(__('firewall-ovh-games::firewall.ip_configs.enabled'))
                     ->boolean()
                     ->sortable(),
 
                 TextColumn::make('last_synced_at')
-                    ->label(__('firewall::firewall.ip_configs.last_synced'))
+                    ->label(__('firewall-ovh-games::firewall.ip_configs.last_synced'))
                     ->dateTime()
                     ->sortable()
-                    ->placeholder(__('firewall::firewall.ip_configs.never_synced')),
+                    ->placeholder(__('firewall-ovh-games::firewall.ip_configs.never_synced')),
 
                 TextColumn::make('created_at')
-                    ->label(__('firewall::firewall.ip_configs.created_at'))
+                    ->label(__('firewall-ovh-games::firewall.ip_configs.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('enabled')
-                    ->label(__('firewall::firewall.ip_configs.status'))
+                    ->label(__('firewall-ovh-games::firewall.ip_configs.status'))
                     ->options([
-                        '1' => __('firewall::firewall.ip_configs.enabled'),
-                        '0' => __('firewall::firewall.ip_configs.disabled'),
+                        '1' => __('firewall-ovh-games::firewall.ip_configs.enabled'),
+                        '0' => __('firewall-ovh-games::firewall.ip_configs.disabled'),
                     ]),
 
                 SelectFilter::make('node_id')
-                    ->label(__('firewall::firewall.ip_configs.node'))
+                    ->label(__('firewall-ovh-games::firewall.ip_configs.node'))
                     ->relationship('node', 'name')
                     ->searchable()
                     ->preload(),

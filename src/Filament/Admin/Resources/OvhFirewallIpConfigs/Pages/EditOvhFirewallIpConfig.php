@@ -23,7 +23,7 @@ class EditOvhFirewallIpConfig extends EditRecord
                 ->icon('tabler-device-floppy'),
 
             Actions\Action::make('sync')
-                ->label(__('firewall::firewall.ip_configs.sync_now'))
+                ->label(__('firewall-ovh-games::firewall.ip_configs.sync_now'))
                 ->icon('tabler-refresh')
                 ->color('success')
                 ->requiresConfirmation()
@@ -33,12 +33,12 @@ class EditOvhFirewallIpConfig extends EditRecord
                         $syncService->syncIpAllocations($this->record->panel_ip);
 
                         Notification::make()
-                            ->title(__('firewall::firewall.ip_configs.sync_success'))
+                            ->title(__('firewall-ovh-games::firewall.ip_configs.sync_success'))
                             ->success()
                             ->send();
                     } catch (\Exception $e) {
                         Notification::make()
-                            ->title(__('firewall::firewall.ip_configs.sync_failed'))
+                            ->title(__('firewall-ovh-games::firewall.ip_configs.sync_failed'))
                             ->body($e->getMessage())
                             ->danger()
                             ->send();

@@ -46,39 +46,39 @@ class FirewallSyncStatsWidget extends BaseWidget
         });
 
         return [
-            Stat::make(__('firewall::firewall.widgets.configured_ips'), $stats['configured_ips'])
-                ->description(__('firewall::firewall.widgets.configured_ips_description'))
+            Stat::make(__('firewall-ovh-games::firewall.widgets.configured_ips'), $stats['configured_ips'])
+                ->description(__('firewall-ovh-games::firewall.widgets.configured_ips_description'))
                 ->descriptionIcon('tabler-network')
                 ->color('primary'),
 
-            Stat::make(__('firewall::firewall.widgets.active_allocations'), $stats['total_allocations'])
-                ->description(__('firewall::firewall.widgets.active_allocations_description'))
+            Stat::make(__('firewall-ovh-games::firewall.widgets.active_allocations'), $stats['total_allocations'])
+                ->description(__('firewall-ovh-games::firewall.widgets.active_allocations_description'))
                 ->descriptionIcon('tabler-server')
                 ->color('info'),
 
-            Stat::make(__('firewall::firewall.widgets.successful_syncs'), $stats['successful_syncs'])
-                ->description(__('firewall::firewall.widgets.last_24h'))
+            Stat::make(__('firewall-ovh-games::firewall.widgets.successful_syncs'), $stats['successful_syncs'])
+                ->description(__('firewall-ovh-games::firewall.widgets.last_24h'))
                 ->descriptionIcon('tabler-check')
                 ->color('success'),
 
-            Stat::make(__('firewall::firewall.widgets.failed_syncs'), $stats['failed_syncs'])
-                ->description(__('firewall::firewall.widgets.last_24h'))
+            Stat::make(__('firewall-ovh-games::firewall.widgets.failed_syncs'), $stats['failed_syncs'])
+                ->description(__('firewall-ovh-games::firewall.widgets.last_24h'))
                 ->descriptionIcon('tabler-x')
                 ->color($stats['failed_syncs'] > 0 ? 'danger' : 'gray'),
 
-            Stat::make(__('firewall::firewall.widgets.last_sync'), 
-                $stats['last_sync'] ? $stats['last_sync']->synced_at->diffForHumans() : __('firewall::firewall.widgets.never')
+            Stat::make(__('firewall-ovh-games::firewall.widgets.last_sync'), 
+                $stats['last_sync'] ? $stats['last_sync']->synced_at->diffForHumans() : __('firewall-ovh-games::firewall.widgets.never')
             )
-                ->description(__('firewall::firewall.widgets.last_successful_sync'))
+                ->description(__('firewall-ovh-games::firewall.widgets.last_successful_sync'))
                 ->descriptionIcon('tabler-clock')
                 ->color($stats['last_sync'] && $stats['last_sync']->synced_at->isToday() ? 'success' : 'warning'),
 
-            Stat::make(__('firewall::firewall.widgets.sync_status'), 
+            Stat::make(__('firewall-ovh-games::firewall.widgets.sync_status'), 
                 $stats['settings']->sync_enabled 
-                    ? __('firewall::firewall.widgets.enabled') 
-                    : __('firewall::firewall.widgets.disabled')
+                    ? __('firewall-ovh-games::firewall.widgets.enabled') 
+                    : __('firewall-ovh-games::firewall.widgets.disabled')
             )
-                ->description(__('firewall::firewall.widgets.automatic_sync'))
+                ->description(__('firewall-ovh-games::firewall.widgets.automatic_sync'))
                 ->descriptionIcon($stats['settings']->sync_enabled ? 'tabler-check' : 'tabler-x')
                 ->color($stats['settings']->sync_enabled ? 'success' : 'danger'),
         ];

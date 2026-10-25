@@ -7,6 +7,8 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Role;
 use App\Models\Allocation;
 use RoyalMultiGamers\FirewallOVHGames\Models\OvhFirewallSetting;
@@ -16,8 +18,6 @@ use RoyalMultiGamers\FirewallOVHGames\Services\OvhApiService;
 use RoyalMultiGamers\FirewallOVHGames\Services\FirewallSyncService;
 use RoyalMultiGamers\FirewallOVHGames\Observers\AllocationObserver;
 use RoyalMultiGamers\FirewallOVHGames\Jobs\SyncFirewallRulesJob;
-use RoyalMultiGamers\FirewallOVHGames\Commands\SyncFirewallRulesCommand;
-use RoyalMultiGamers\FirewallOVHGames\Commands\TestOvhConnectionCommand;
 
 class FirewallOVHGamesPluginProvider extends ServiceProvider
 {
@@ -53,6 +53,7 @@ class FirewallOVHGamesPluginProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Translations, migrations and commands are auto-registered by the panel.
         // Restart queue workers after any plugin lifecycle command so workers
         // pick up newly installed/removed/toggled plugin code automatically.
         Event::listen(CommandFinished::class, function (CommandFinished $event) {
@@ -70,31 +71,9 @@ class FirewallOVHGamesPluginProvider extends ServiceProvider
             }
         });
 
-        // Load translations
-        $this->loadTranslationsFrom(
-            plugin_path('firewall-ovh-games', 'lang'),
-            'firewall'
-        );
-
-        // Publish configuration
-        $this->publishes([
-            plugin_path('firewall-ovh-games', 'config/firewall-ovh-games.php') => config_path('firewall-ovh-games.php'),
-        ], 'firewall-ovh-games-config');
-
-        // Load and publish migrations
-        $this->loadMigrationsFrom(plugin_path('firewall-ovh-games', 'database/migrations'));
-
-        // Register commands (always register, not just in console)
-        // This allows Artisan::call() to work from web interface
-        $this->commands([
-            SyncFirewallRulesCommand::class,
-            TestOvhConnectionCommand::class,
-            \RoyalMultiGamers\FirewallOVHGames\Commands\SyncNodeIpsCommand::class,
-        ]);
-
         // Only register observer and scheduler if tables exist
         try {
-            if (\Schema::hasTable('ovh_firewall_settings')) {
+            if (Schema::hasTable('ovh_firewall_settings')) {
                 // Register Allocation observer for automatic sync on events
                 $settings = OvhFirewallSetting::getInstance();
                 if ($settings->sync_on_events) {
@@ -109,7 +88,7 @@ class FirewallOVHGamesPluginProvider extends ServiceProvider
 
                         if ($settings->sync_enabled) {
                             $interval = $settings->sync_interval ?? 5;
-                            
+
                             // Queue full sync job via panel scheduler
                             $schedule->job(new SyncFirewallRulesJob(), config('firewall-ovh-games.sync.queue_name', 'default'))
                                 ->cron("*/{$interval} * * * *")
@@ -120,13 +99,13 @@ class FirewallOVHGamesPluginProvider extends ServiceProvider
                         $schedule->call(function () {
                             OvhFirewallSyncLog::cleanupOldLogs();
                         })->dailyAt('03:30')->withoutOverlapping();
-                    } catch (\Exception $e) {
-                        // Settings not configured yet, skip scheduling
+                    } catch (\Throwable $e) {
+                        Log::debug('Firewall OVH Games: scheduling skipped', ['error' => $e->getMessage()]);
                     }
                 });
             }
-        } catch (\Exception $e) {
-            // Tables don't exist yet, skip observer and scheduler registration
+        } catch (\Throwable $e) {
+            // Database unavailable (e.g. before migrations), skip observer and scheduler registration
         }
     }
 }
