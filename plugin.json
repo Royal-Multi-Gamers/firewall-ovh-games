@@ -2,7 +2,7 @@
     "id": "firewall-ovh-games",
     "name": "Firewall OVH Games",
     "author": "Royal Multi Gamers",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Automatically manage OVH Game firewall rules based on Pelican Panel allocations",
     "category": "plugin",
     "url": "https://github.com/Royal-Multi-Gamers/firewall-ovh-games",
