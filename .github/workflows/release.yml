@@ -12,9 +12,11 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      # Check out the tagged commit itself: the version check and the zip must
+      # both use the same plugin.json (checking main but zipping the tag
+      # shipped a 1.0.1 release containing "version": "1.0.0").
       - uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
 
       - name: Check tag matches plugin.json version
@@ -37,6 +39,8 @@ jobs:
       - name: Update update.json
         run: |
           VERSION="$GITHUB_REF_NAME"
+          git fetch origin main
+          git checkout -B main origin/main
           jq --arg v "$VERSION" --arg u "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/firewall-ovh-games.zip" \
             '.["*"] = {version: $v, download_url: $u}' update.json > update.tmp && mv update.tmp update.json
           git config user.name "github-actions[bot]"
